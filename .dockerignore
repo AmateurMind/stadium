@@ -1,0 +1,14 @@
+.git/
+.venv/
+venv/
+node_modules/
+frontend/dist/
+frontend/coverage/
+backend/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+.DS_Store
+*.md
+referencce.txt

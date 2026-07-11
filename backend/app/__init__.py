@@ -1,0 +1,1 @@
+"""StadiumSync backend application package."""
