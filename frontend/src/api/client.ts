@@ -79,4 +79,9 @@ export const apiClient = {
     const res = await fetch(`${BASE_URL}/grounds${qs}`);
     return handleResponse<{ grounds: GroundSummary[]; total: number }>(res);
   },
+
+  async getMatchStats(matchId = 'mt_010249745'): Promise<any> {
+    const res = await fetch(`${BASE_URL}/stats?match_id=${matchId}`);
+    return handleResponse<any>(res);
+  },
 };

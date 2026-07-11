@@ -8,11 +8,12 @@
  *   - Full accessibility support
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useStadiumStore } from '../../store/stadiumStore';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { getSeverityColor, formatZoneType, getZoneIcon } from '../../utils/formatters';
+import { apiClient } from '../../api/client';
 
 const OCCUPANCY_COLORS: Record<string, string> = {
   normal: '#22c55e',
@@ -27,8 +28,20 @@ export const StaffDashboard = () => {
   const error = useStadiumStore(s => s.error);
   const fetchCrowdAnalysis = useStadiumStore(s => s.fetchCrowdAnalysis);
 
+  const [matchStats, setMatchStats] = useState<any>(null);
+
+  const fetchStats = async () => {
+    try {
+      const data = await apiClient.getMatchStats();
+      setMatchStats(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     fetchCrowdAnalysis();
+    fetchStats();
   }, [fetchCrowdAnalysis]);
 
   if (isLoadingCrowd && !crowdAnalysis) {
@@ -58,6 +71,122 @@ export const StaffDashboard = () => {
 
   return (
     <section aria-label="Staff Operations Dashboard" className="space-y-6">
+      {/* Live Match Analytics Panel (thestatsapi.com integration) */}
+      {matchStats && (
+        <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden border border-slate-800">
+          <div className="absolute top-0 right-0 bg-primary-600 text-[10px] uppercase font-bold tracking-[0.15em] px-4 py-1.5 rounded-bl-2xl">
+            Live stats: {matchStats.source}
+          </div>
+          <div className="flex justify-between items-center mb-6">
+            <div className="text-left">
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Tournament Match</p>
+              <h3 className="text-xl font-black mt-1 flex items-center gap-2">
+                ⚽ {matchStats.teams.home.name} vs {matchStats.teams.away.name}
+              </h3>
+            </div>
+            <div className="text-right">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400 animate-pulse">
+                Live {matchStats.minute}'
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Score & xG comparison */}
+            <div className="space-y-4">
+              <div className="flex justify-around items-center py-4 bg-slate-800/40 rounded-2xl border border-slate-800">
+                <div className="text-center">
+                  <p className="text-3xl font-black">{matchStats.teams.home.goals}</p>
+                  <p className="text-xs text-slate-400 mt-1">{matchStats.teams.home.name}</p>
+                </div>
+                <div className="text-slate-500 font-bold">vs</div>
+                <div className="text-center">
+                  <p className="text-3xl font-black">{matchStats.teams.away.goals}</p>
+                  <p className="text-xs text-slate-400 mt-1">{matchStats.teams.away.name}</p>
+                </div>
+              </div>
+
+              {/* xG progress */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-slate-400">
+                  <span>xG: {matchStats.overview.expected_goals.all.home}</span>
+                  <span className="font-semibold uppercase tracking-wider text-[10px]">Expected Goals (xG)</span>
+                  <span>xG: {matchStats.overview.expected_goals.all.away}</span>
+                </div>
+                <div className="h-3 bg-slate-800 rounded-full flex overflow-hidden">
+                  <div
+                    className="bg-primary-500 h-full rounded-l-full transition-all duration-500"
+                    style={{
+                      width: `${
+                        (matchStats.overview.expected_goals.all.home /
+                          (matchStats.overview.expected_goals.all.home +
+                            matchStats.overview.expected_goals.all.away || 1)) *
+                        100
+                      }%`,
+                    }}
+                  />
+                  <div
+                    className="bg-amber-500 h-full rounded-r-full transition-all duration-500"
+                    style={{
+                      width: `${
+                        (matchStats.overview.expected_goals.all.away /
+                          (matchStats.overview.expected_goals.all.home +
+                            matchStats.overview.expected_goals.all.away || 1)) *
+                        100
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Possession & Shot Summary */}
+            <div className="space-y-4">
+              {/* Possession */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-slate-400">
+                  <span>{matchStats.overview.possession_pct.home}%</span>
+                  <span>Possession</span>
+                  <span>{matchStats.overview.possession_pct.away}%</span>
+                </div>
+                <div className="h-2 bg-slate-800 rounded-full flex overflow-hidden">
+                  <div
+                    className="bg-primary-500 h-full transition-all duration-500"
+                    style={{ width: `${matchStats.overview.possession_pct.home}%` }}
+                  />
+                  <div
+                    className="bg-slate-700 h-full transition-all duration-500"
+                    style={{ width: `${matchStats.overview.possession_pct.away}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-3 bg-slate-800/40 rounded-xl border border-slate-800">
+                  <p className="text-slate-400 font-semibold mb-0.5">Shots</p>
+                  <p className="font-bold text-sm">
+                    {matchStats.overview.shots.home} - {matchStats.overview.shots.away}
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-800/40 rounded-xl border border-slate-800">
+                  <p className="text-slate-400 font-semibold mb-0.5">Fouls</p>
+                  <p className="font-bold text-sm">
+                    {matchStats.overview.fouls.home} - {matchStats.overview.fouls.away}
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-800/40 rounded-xl border border-slate-800">
+                  <p className="text-slate-400 font-semibold mb-0.5">Corners</p>
+                  <p className="font-bold text-sm">
+                    {matchStats.overview.corners.home} - {matchStats.overview.corners.away}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Overall stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">

@@ -11,37 +11,62 @@ describe('StaffDashboard Visualizer', () => {
   });
 
   it('renders overall stadium occupancy statistics and alerts list', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        zones: [
-          {
-            zone_id: 'gate-a',
-            zone_name: 'Gate A Entrance',
-            zone_type: 'gate',
-            current_occupancy: 4500,
-            max_capacity: 5000,
-            occupancy_pct: 90.0,
-            status: 'congested',
-            wait_time_minutes: 25,
-            is_accessible: true,
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          zones: [
+            {
+              zone_id: 'gate-a',
+              zone_name: 'Gate A Entrance',
+              zone_type: 'gate',
+              current_occupancy: 4500,
+              max_capacity: 5000,
+              occupancy_pct: 90.0,
+              status: 'congested',
+              wait_time_minutes: 25,
+              is_accessible: true,
+            },
+          ],
+          alerts: [
+            {
+              zone_id: 'gate-a',
+              severity: 'critical',
+              message: 'Gate A is extremely congested.',
+              recommended_action: 'Open overflow Gate B lanes.',
+              estimated_impact: 'Reduce wait times by 10 minutes.',
+            },
+          ],
+          total_attendance: 4500,
+          stadium_capacity: 60000,
+          overall_occupancy_pct: 7.5,
+          source: 'gemini',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          match_id: 'mt_010249745',
+          status: 'live',
+          minute: 74,
+          teams: {
+            home: { name: 'Argentina', goals: 2 },
+            away: { name: 'France', goals: 1 },
           },
-        ],
-        alerts: [
-          {
-            zone_id: 'gate-a',
-            severity: 'critical',
-            message: 'Gate A is extremely congested.',
-            recommended_action: 'Open overflow Gate B lanes.',
-            estimated_impact: 'Reduce wait times by 10 minutes.',
+          overview: {
+            expected_goals: {
+              all: { home: 2.34, away: 0.87 },
+              first_half: { home: 1.21, away: 0.34 },
+              second_half: { home: 1.13, away: 0.53 },
+            },
+            possession_pct: { home: 54, away: 46 },
+            shots: { home: 12, away: 7 },
+            fouls: { home: 11, away: 14 },
+            corners: { home: 6, away: 4 },
           },
-        ],
-        total_attendance: 4500,
-        stadium_capacity: 60000,
-        overall_occupancy_pct: 7.5,
-        source: 'gemini',
-      }),
-    });
+          source: 'thestatsapi',
+        }),
+      });
 
     render(<StaffDashboard />);
 

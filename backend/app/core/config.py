@@ -81,6 +81,10 @@ class Settings(BaseSettings):
         default="gemini-2.0-flash",
         description="Vertex AI Generative Model identifier",
     )
+    GEMINI_API_KEY: str | None = Field(
+        default=None,
+        description="Google AI Studio Gemini API Key",
+    )
 
     # -----------------------------------------------------------------------
     # Application
@@ -98,6 +102,10 @@ class Settings(BaseSettings):
         ge=1,
         le=200,
         description="Maximum number of chat messages retained per session",
+    )
+    THE_STATS_API_KEY: str | None = Field(
+        default=None,
+        description="API Key for www.thestatsapi.com",
     )
 
 

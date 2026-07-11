@@ -73,70 +73,96 @@ Return ONLY a valid JSON object. No markdown, no explanation, no code fences. Ex
 """
 
 
+async def _generate_content_ai_studio(
+    prompt: str,
+    model_id: str,
+    api_key: str,
+    temperature: float = 0.6,
+    max_tokens: int = 1024,
+    is_json: bool = True
+) -> str:
+    import httpx
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
+    payload = {
+        "contents": [
+            {
+                "parts": [{"text": prompt}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": temperature,
+            "maxOutputTokens": max_tokens
+        }
+    }
+    if is_json:
+        payload["generationConfig"]["responseMimeType"] = "application/json"
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        response = await client.post(url, json=payload)
+        if response.status_code == 200:
+            data = response.json()
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            raise GeminiUnavailableError(f"AI Studio API returned status {response.status_code}: {response.text}")
+
+
 async def generate_fan_response(
     message: str,
     language: str,
     category: str,
     zones: list[ZoneStatus],
 ) -> dict[str, Any]:
-    """Call Vertex AI Gemini to generate a fan assistant response.
-
-    Args:
-        message: Fan's natural language query.
-        language: ISO 639-1 language code.
-        category: Topic category of the query.
-        zones: Current zone statuses for context.
-
-    Returns:
-        Dict with reply, language, category, and suggested_actions.
-
-    Raises:
-        GeminiUnavailableError: If Gemini returns an error, invalid JSON, or times out.
-    """
+    """Call Vertex AI Gemini or AI Studio to generate a fan assistant response."""
     settings = get_settings()
+    zone_context = "\n".join(
+        f"  - {z.zone_name} ({z.zone_type}): {z.occupancy_pct}% full, "
+        f"status={z.status}, wait={z.wait_time_minutes}min, "
+        f"accessible={'Yes' if z.is_accessible else 'No'}"
+        for z in zones
+    )
+    prompt = _build_fan_prompt(message, language, category, zone_context)
 
     try:
-        import vertexai
-        from vertexai.generative_models import GenerationConfig, GenerativeModel
+        if settings.GEMINI_API_KEY:
+            raw_text = await _generate_content_ai_studio(
+                prompt=prompt,
+                model_id=settings.GEMINI_MODEL,
+                api_key=settings.GEMINI_API_KEY,
+                temperature=0.6,
+                max_tokens=1024,
+                is_json=True
+            )
+        else:
+            import vertexai
+            from vertexai.generative_models import GenerationConfig, GenerativeModel
 
-        vertexai.init(project=settings.PROJECT_ID, location=settings.REGION)
-        model = GenerativeModel(settings.GEMINI_MODEL)
+            vertexai.init(project=settings.PROJECT_ID, location=settings.REGION)
+            model = GenerativeModel(settings.GEMINI_MODEL)
 
-        zone_context = "\n".join(
-            f"  - {z.zone_name} ({z.zone_type}): {z.occupancy_pct}% full, "
-            f"status={z.status}, wait={z.wait_time_minutes}min, "
-            f"accessible={'Yes' if z.is_accessible else 'No'}"
-            for z in zones
-        )
+            generation_config = GenerationConfig(
+                temperature=0.6,
+                top_p=0.85,
+                max_output_tokens=1024,
+            )
 
-        prompt = _build_fan_prompt(message, language, category, zone_context)
-
-        generation_config = GenerationConfig(
-            temperature=0.6,
-            top_p=0.85,
-            max_output_tokens=1024,
-        )
-
-        response = await asyncio.wait_for(
-            asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: model.generate_content(
-                    prompt,
-                    generation_config=generation_config,
+            response = await asyncio.wait_for(
+                asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: model.generate_content(
+                        prompt,
+                        generation_config=generation_config,
+                    ),
                 ),
-            ),
-            timeout=15.0,
-        )
+                timeout=15.0,
+            )
+            raw_text = response.text.strip()
 
-        raw_text = response.text.strip()
-
-        # Strip potential markdown code fences Gemini sometimes adds
+        # Clean code fences
         if raw_text.startswith("```"):
             raw_text = raw_text.split("\n", 1)[1]
             raw_text = raw_text.rsplit("```", 1)[0].strip()
 
         parsed: dict[str, Any] = json.loads(raw_text)
-
         if not isinstance(parsed, dict) or "reply" not in parsed:
             raise ValueError("Gemini returned invalid response structure")
 
@@ -200,58 +226,54 @@ Return ONLY a valid JSON array. No markdown, no explanation, no code fences.
 async def generate_crowd_alerts(
     zones: list[ZoneStatus],
 ) -> list[CrowdAlert]:
-    """Call Vertex AI Gemini to generate crowd management alerts.
-
-    Args:
-        zones: Current zone statuses.
-
-    Returns:
-        List of CrowdAlert instances.
-
-    Raises:
-        GeminiUnavailableError: If Gemini returns an error, invalid JSON, or times out.
-    """
+    """Call Vertex AI Gemini or AI Studio to generate crowd management alerts."""
     settings = get_settings()
+    prompt = _build_crowd_prompt(zones)
 
     try:
-        import vertexai
-        from vertexai.generative_models import GenerationConfig, GenerativeModel
+        if settings.GEMINI_API_KEY:
+            raw_text = await _generate_content_ai_studio(
+                prompt=prompt,
+                model_id=settings.GEMINI_MODEL,
+                api_key=settings.GEMINI_API_KEY,
+                temperature=0.3,
+                max_tokens=2048,
+                is_json=True
+            )
+        else:
+            import vertexai
+            from vertexai.generative_models import GenerationConfig, GenerativeModel
 
-        vertexai.init(project=settings.PROJECT_ID, location=settings.REGION)
-        model = GenerativeModel(settings.GEMINI_MODEL)
+            vertexai.init(project=settings.PROJECT_ID, location=settings.REGION)
+            model = GenerativeModel(settings.GEMINI_MODEL)
 
-        prompt = _build_crowd_prompt(zones)
+            generation_config = GenerationConfig(
+                temperature=0.3,
+                top_p=0.8,
+                max_output_tokens=2048,
+            )
 
-        generation_config = GenerationConfig(
-            temperature=0.3,
-            top_p=0.8,
-            max_output_tokens=2048,
-        )
-
-        response = await asyncio.wait_for(
-            asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: model.generate_content(
-                    prompt,
-                    generation_config=generation_config,
+            response = await asyncio.wait_for(
+                asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: model.generate_content(
+                        prompt,
+                        generation_config=generation_config,
+                    ),
                 ),
-            ),
-            timeout=15.0,
-        )
-
-        raw_text = response.text.strip()
+                timeout=15.0,
+            )
+            raw_text = response.text.strip()
 
         if raw_text.startswith("```"):
             raw_text = raw_text.split("\n", 1)[1]
             raw_text = raw_text.rsplit("```", 1)[0].strip()
 
         raw_alerts: list[dict[str, Any]] = json.loads(raw_text)
-
         if not isinstance(raw_alerts, list) or len(raw_alerts) == 0:
             raise ValueError("Gemini returned empty or non-list JSON")
 
         alerts = [CrowdAlert(**alert) for alert in raw_alerts[:10]]
-
         logger.info("Gemini generated %d crowd alerts successfully", len(alerts))
         return alerts
 
