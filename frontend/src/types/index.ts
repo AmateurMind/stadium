@@ -64,6 +64,15 @@ export interface CrowdAlert {
   estimated_impact: string;
 }
 
+export interface OperationsBrief {
+  risk_level: 'low' | 'elevated' | 'high' | 'critical';
+  headline: string;
+  recommended_staffing: string[];
+  fan_messaging: string[];
+  accessibility_note: string;
+  sustainability_note: string;
+}
+
 export interface CrowdAnalysis {
   zones: ZoneStatus[];
   alerts: CrowdAlert[];
@@ -71,6 +80,7 @@ export interface CrowdAnalysis {
   stadium_capacity: number;
   overall_occupancy_pct: number;
   source: 'gemini' | 'rules';
+  operations_brief: OperationsBrief;
 }
 
 export interface ChatMessage {
@@ -97,3 +107,24 @@ export interface GroundSummary {
   verified: boolean;
 }
 
+export interface MatchStats {
+  match_id: string;
+  status: string;
+  minute: number;
+  teams: {
+    home: { name: string; goals: number };
+    away: { name: string; goals: number };
+  };
+  overview: {
+    expected_goals: {
+      all: { home: number; away: number };
+      first_half: { home: number; away: number };
+      second_half: { home: number; away: number };
+    };
+    possession_pct: { home: number; away: number };
+    shots: { home: number; away: number };
+    fouls: { home: number; away: number };
+    corners: { home: number; away: number };
+  };
+  source: string;
+}

@@ -27,7 +27,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import get_settings
 from app.core.rate_limit import limiter
 from app.core.security import SecurityHeadersMiddleware
-from app.routes import assistant, crowd, health, zones, grounds, stats
+from app.routes import assistant, crowd, grounds, health, stats, zones
 
 
 @asynccontextmanager

@@ -18,6 +18,7 @@ from app.models.stadium import CrowdAnalysisResponse
 from app.services.gemini_service import GeminiUnavailableError, generate_crowd_alerts
 from app.services.stadium_data import (
     STADIUM_CAPACITY,
+    get_operations_brief,
     get_rule_based_alerts,
     get_total_attendance,
     get_zone_statuses,
@@ -61,6 +62,7 @@ async def get_crowd_analysis(request: Request) -> CrowdAnalysisResponse:
         stadium_capacity=STADIUM_CAPACITY,
         overall_occupancy_pct=round(total / STADIUM_CAPACITY * 100, 1),
         source=cast(Literal["gemini", "rules"], source),
+        operations_brief=get_operations_brief(zones, alerts),
     )
 
 

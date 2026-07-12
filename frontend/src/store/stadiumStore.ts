@@ -19,6 +19,7 @@ import type {
   CrowdAnalysis,
   Language,
   GroundSummary,
+  QueryCategory,
 } from '../types';
 import { getSessionId } from '../utils/formatters';
 import { withLoadingState } from '../utils/storeHelpers';
@@ -85,7 +86,7 @@ export const useStadiumStore = create<StadiumState>((set, get) => ({
           language,
           stadium_id: stadiumId,
           session_id: sessionId,
-          category: category as 'general',
+          category: category as QueryCategory,
         }),
       'isLoadingChat',
       'Failed to get response from assistant'

@@ -14,6 +14,7 @@ import { useStadiumStore } from '../../store/stadiumStore';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { getSeverityColor, formatZoneType, getZoneIcon } from '../../utils/formatters';
 import { apiClient } from '../../api/client';
+import type { MatchStats } from '../../types';
 
 const OCCUPANCY_COLORS: Record<string, string> = {
   normal: '#22c55e',
@@ -22,13 +23,20 @@ const OCCUPANCY_COLORS: Record<string, string> = {
   closed: '#6b7280',
 };
 
+const RISK_STYLES: Record<string, string> = {
+  low: 'bg-green-50 text-green-800 border-green-200',
+  elevated: 'bg-amber-50 text-amber-800 border-amber-200',
+  high: 'bg-orange-50 text-orange-800 border-orange-200',
+  critical: 'bg-red-50 text-red-800 border-red-200',
+};
+
 export const StaffDashboard = () => {
   const crowdAnalysis = useStadiumStore(s => s.crowdAnalysis);
   const isLoadingCrowd = useStadiumStore(s => s.isLoadingCrowd);
   const error = useStadiumStore(s => s.error);
   const fetchCrowdAnalysis = useStadiumStore(s => s.fetchCrowdAnalysis);
 
-  const [matchStats, setMatchStats] = useState<any>(null);
+  const [matchStats, setMatchStats] = useState<MatchStats | null>(null);
 
   const fetchStats = async () => {
     try {
@@ -62,6 +70,7 @@ export const StaffDashboard = () => {
 
   if (!crowdAnalysis) return null;
 
+  const operationsBrief = crowdAnalysis.operations_brief;
   const chartData = crowdAnalysis.zones.map(z => ({
     name: z.zone_name.split(' — ')[0].split(' – ')[0],
     occupancy: z.occupancy_pct,
@@ -186,6 +195,60 @@ export const StaffDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Operations command brief */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-gray-500 mb-1">
+              FIFA 2026 Operations Brief
+            </p>
+            <h2 className="text-lg font-bold text-gray-900">{operationsBrief.headline}</h2>
+          </div>
+          <span
+            className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+              RISK_STYLES[operationsBrief.risk_level] ?? RISK_STYLES.low
+            }`}
+          >
+            {operationsBrief.risk_level} risk
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800 mb-2">Staff Deployment</h3>
+            <ul className="space-y-2" aria-label="Recommended staff deployment actions">
+              {operationsBrief.recommended_staffing.map(action => (
+                <li key={action} className="text-sm text-gray-600 flex gap-2">
+                  <span aria-hidden="true" className="mt-1 h-1.5 w-1.5 rounded-full bg-primary-500 shrink-0" />
+                  <span>{action}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800 mb-2">Fan Messaging</h3>
+            <ul className="space-y-2" aria-label="Recommended fan-facing messages">
+              {operationsBrief.fan_messaging.map(message => (
+                <li key={message} className="text-sm text-gray-600 flex gap-2">
+                  <span aria-hidden="true" className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                  <span>{message}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+          <p className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
+            <span className="font-semibold">Accessibility:</span> {operationsBrief.accessibility_note}
+          </p>
+          <p className="rounded-xl bg-emerald-50 border border-emerald-100 p-3 text-sm text-emerald-900">
+            <span className="font-semibold">Sustainability:</span> {operationsBrief.sustainability_note}
+          </p>
+        </div>
+      </div>
 
       {/* Overall stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

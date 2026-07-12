@@ -5,9 +5,11 @@ Includes a fallback helper that returns realistic simulation data when no API ke
 
 from __future__ import annotations
 
-import httpx
 import logging
 from typing import Any
+
+import httpx
+
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)

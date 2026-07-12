@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, type Mock } from 'vitest';
 import { FanAssistant } from '../src/components/Assistant/FanAssistant';
 import { useStadiumStore } from '../src/store/stadiumStore';
 
 // Mock the global fetch
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as Mock;
 
 describe('FanAssistant Chat Interface', () => {
   beforeEach(() => {
@@ -74,7 +74,9 @@ describe('FanAssistant Chat Interface', () => {
 
     const input = screen.getByPlaceholderText(/ask about navigation/i);
     const sendButton = screen.getByRole('button', { name: /send/i });
+    const amenitiesButton = screen.getByRole('radio', { name: /amenities/i });
 
+    fireEvent.click(amenitiesButton);
     fireEvent.change(input, { target: { value: 'Where is the restroom?' } });
     fireEvent.click(sendButton);
 
@@ -87,5 +89,8 @@ describe('FanAssistant Chat Interface', () => {
       expect(screen.getByText(/suggested:/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /find food/i })).toBeInTheDocument();
     });
+
+    const requestBody = JSON.parse(mockFetch.mock.calls[1][1].body);
+    expect(requestBody.category).toBe('amenities');
   });
 });

@@ -13,27 +13,117 @@ import hashlib
 import random
 from datetime import UTC, datetime
 
-from app.models.stadium import CrowdAlert, ZoneStatus
+from app.models.stadium import CrowdAlert, OperationsBrief, ZoneStatus
 
 # ---------------------------------------------------------------------------
 # Stadium layout definition (FIFA World Cup 2026 prototype stadium)
 # ---------------------------------------------------------------------------
 _STADIUM_ZONES: list[dict] = [
-    {"zone_id": "gate-a", "zone_name": "Gate A — Main Entrance", "zone_type": "gate", "max_capacity": 5000, "is_accessible": True},
-    {"zone_id": "gate-b", "zone_name": "Gate B — East Entrance", "zone_type": "gate", "max_capacity": 4000, "is_accessible": True},
-    {"zone_id": "gate-c", "zone_name": "Gate C — West Entrance", "zone_type": "gate", "max_capacity": 4000, "is_accessible": True},
-    {"zone_id": "gate-d", "zone_name": "Gate D — VIP Entrance", "zone_type": "gate", "max_capacity": 1500, "is_accessible": True},
-    {"zone_id": "concourse-north", "zone_name": "North Concourse", "zone_type": "concourse", "max_capacity": 8000, "is_accessible": True},
-    {"zone_id": "concourse-south", "zone_name": "South Concourse", "zone_type": "concourse", "max_capacity": 8000, "is_accessible": True},
-    {"zone_id": "section-101", "zone_name": "Section 101 — Lower Bowl", "zone_type": "seating", "max_capacity": 3000, "is_accessible": True},
-    {"zone_id": "section-201", "zone_name": "Section 201 — Upper Bowl", "zone_type": "seating", "max_capacity": 4000, "is_accessible": False},
-    {"zone_id": "section-vip", "zone_name": "VIP Lounge", "zone_type": "vip", "max_capacity": 500, "is_accessible": True},
-    {"zone_id": "restroom-north", "zone_name": "North Restrooms", "zone_type": "restroom", "max_capacity": 200, "is_accessible": True},
-    {"zone_id": "restroom-south", "zone_name": "South Restrooms", "zone_type": "restroom", "max_capacity": 200, "is_accessible": True},
-    {"zone_id": "food-court-a", "zone_name": "Food Court A", "zone_type": "concession", "max_capacity": 1500, "is_accessible": True},
-    {"zone_id": "food-court-b", "zone_name": "Food Court B", "zone_type": "concession", "max_capacity": 1200, "is_accessible": True},
-    {"zone_id": "first-aid-main", "zone_name": "Main First Aid Station", "zone_type": "first_aid", "max_capacity": 50, "is_accessible": True},
-    {"zone_id": "parking-lot-1", "zone_name": "Parking Lot 1", "zone_type": "parking", "max_capacity": 3000, "is_accessible": True},
+    {
+        "zone_id": "gate-a",
+        "zone_name": "Gate A — Main Entrance",
+        "zone_type": "gate",
+        "max_capacity": 5000,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "gate-b",
+        "zone_name": "Gate B — East Entrance",
+        "zone_type": "gate",
+        "max_capacity": 4000,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "gate-c",
+        "zone_name": "Gate C — West Entrance",
+        "zone_type": "gate",
+        "max_capacity": 4000,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "gate-d",
+        "zone_name": "Gate D — VIP Entrance",
+        "zone_type": "gate",
+        "max_capacity": 1500,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "concourse-north",
+        "zone_name": "North Concourse",
+        "zone_type": "concourse",
+        "max_capacity": 8000,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "concourse-south",
+        "zone_name": "South Concourse",
+        "zone_type": "concourse",
+        "max_capacity": 8000,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "section-101",
+        "zone_name": "Section 101 — Lower Bowl",
+        "zone_type": "seating",
+        "max_capacity": 3000,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "section-201",
+        "zone_name": "Section 201 — Upper Bowl",
+        "zone_type": "seating",
+        "max_capacity": 4000,
+        "is_accessible": False,
+    },
+    {
+        "zone_id": "section-vip",
+        "zone_name": "VIP Lounge",
+        "zone_type": "vip",
+        "max_capacity": 500,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "restroom-north",
+        "zone_name": "North Restrooms",
+        "zone_type": "restroom",
+        "max_capacity": 200,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "restroom-south",
+        "zone_name": "South Restrooms",
+        "zone_type": "restroom",
+        "max_capacity": 200,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "food-court-a",
+        "zone_name": "Food Court A",
+        "zone_type": "concession",
+        "max_capacity": 1500,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "food-court-b",
+        "zone_name": "Food Court B",
+        "zone_type": "concession",
+        "max_capacity": 1200,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "first-aid-main",
+        "zone_name": "Main First Aid Station",
+        "zone_type": "first_aid",
+        "max_capacity": 50,
+        "is_accessible": True,
+    },
+    {
+        "zone_id": "parking-lot-1",
+        "zone_name": "Parking Lot 1",
+        "zone_type": "parking",
+        "max_capacity": 3000,
+        "is_accessible": True,
+    },
 ]
 
 STADIUM_CAPACITY = 60000
@@ -125,11 +215,11 @@ def get_rule_based_alerts(zones: list[ZoneStatus]) -> list[CrowdAlert]:
                     ),
                     recommended_action=(
                         f"Deploy additional staff to {zone.zone_name}. "
-                        f"Open overflow routes and activate digital signage to redirect flow."
+                        "Open overflow routes and activate digital signage to redirect flow."
                     ),
                     estimated_impact=(
-                        f"Reduce occupancy by ~15-20% within 10 minutes, "
-                        f"preventing safety incidents and improving fan experience."
+                        "Reduce occupancy by ~15-20% within 10 minutes, "
+                        "preventing safety incidents and improving fan experience."
                     ),
                 )
             )
@@ -144,11 +234,11 @@ def get_rule_based_alerts(zones: list[ZoneStatus]) -> list[CrowdAlert]:
                     ),
                     recommended_action=(
                         f"Monitor {zone.zone_name} closely. "
-                        f"Consider opening additional service points or lanes."
+                        "Consider opening additional service points or lanes."
                     ),
                     estimated_impact=(
-                        f"Prevent escalation to congested status, "
-                        f"reduce wait times by ~5 minutes."
+                        "Prevent escalation to congested status, "
+                        "reduce wait times by ~5 minutes."
                     ),
                 )
             )
@@ -156,9 +246,103 @@ def get_rule_based_alerts(zones: list[ZoneStatus]) -> list[CrowdAlert]:
     return alerts
 
 
+def get_operations_brief(
+    zones: list[ZoneStatus],
+    alerts: list[CrowdAlert],
+) -> OperationsBrief:
+    """
+    Build a deterministic command-center brief from live zone and alert data.
+
+    The brief turns raw occupancy into staff actions, fan-facing messages,
+    accessibility protection, and sustainability-aware routing guidance.
+    """
+    critical_alerts = [alert for alert in alerts if alert.severity == "critical"]
+    warning_alerts = [alert for alert in alerts if alert.severity == "warning"]
+    busy_zones = sorted(zones, key=lambda zone: zone.occupancy_pct, reverse=True)
+    busiest_zone = busy_zones[0]
+
+    if critical_alerts:
+        risk_level = "critical"
+    elif len(warning_alerts) >= 3 or busiest_zone.occupancy_pct >= 85:
+        risk_level = "high"
+    elif warning_alerts or busiest_zone.occupancy_pct >= 70:
+        risk_level = "elevated"
+    else:
+        risk_level = "low"
+
+    headline = (
+        f"{busiest_zone.zone_name} is the highest-pressure zone "
+        f"at {busiest_zone.occupancy_pct}% capacity."
+    )
+
+    staffing_actions = [
+        f"Position supervisors at {busiest_zone.zone_name} for the next 10-minute cycle.",
+    ]
+    least_busy_gate = _least_busy_zone(zones, "gate")
+    if least_busy_gate:
+        staffing_actions.append(
+            f"Use {least_busy_gate.zone_name} as the primary relief entry route."
+        )
+
+    service_zone = _least_busy_service_zone(zones)
+    if service_zone:
+        staffing_actions.append(
+            f"Steer concession and restroom demand toward {service_zone.zone_name}."
+        )
+
+    fan_messages = [
+        f"Please allow extra time near {busiest_zone.zone_name}.",
+    ]
+    if least_busy_gate:
+        fan_messages.append(f"For faster entry, follow signs toward {least_busy_gate.zone_name}.")
+    if service_zone:
+        fan_messages.append(
+            f"Shorter queues are currently available near {service_zone.zone_name}."
+        )
+
+    accessible_zones = [zone for zone in zones if zone.is_accessible]
+    accessible_bottleneck = max(accessible_zones, key=lambda zone: zone.occupancy_pct)
+    accessibility_note = (
+        f"Protect step-free movement near {accessible_bottleneck.zone_name}; "
+        "keep elevators, ramps, and companion seating routes staffed."
+    )
+
+    sustainability_note = (
+        "Prioritize app push alerts and digital signage before printed notices; "
+        "route fans to existing open lanes instead of adding temporary barriers."
+    )
+
+    return OperationsBrief(
+        risk_level=risk_level,
+        headline=headline,
+        recommended_staffing=staffing_actions,
+        fan_messaging=fan_messages,
+        accessibility_note=accessibility_note,
+        sustainability_note=sustainability_note,
+    )
+
+
 def get_total_attendance(zones: list[ZoneStatus]) -> int:
     """Sum current occupancy across all zones."""
     return sum(z.current_occupancy for z in zones)
+
+
+def _least_busy_zone(zones: list[ZoneStatus], zone_type: str) -> ZoneStatus | None:
+    candidates = [zone for zone in zones if zone.zone_type == zone_type and zone.status != "closed"]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda zone: zone.occupancy_pct)
+
+
+def _least_busy_service_zone(zones: list[ZoneStatus]) -> ZoneStatus | None:
+    candidates = [
+        zone
+        for zone in zones
+        if zone.zone_type in ("restroom", "concession") and zone.status != "closed"
+    ]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda zone: (zone.wait_time_minutes, zone.occupancy_pct))
 
 
 def find_nearest_zone(
@@ -177,7 +361,8 @@ def find_nearest_zone(
     """
     zones = get_zone_statuses()
     candidates = [
-        z for z in zones
+        z
+        for z in zones
         if z.zone_type == zone_type
         and (not accessible_only or z.is_accessible)
         and z.status != "closed"

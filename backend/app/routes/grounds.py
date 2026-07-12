@@ -4,11 +4,10 @@ GET /api/grounds — Stadium grounds list and detail endpoint.
 
 from __future__ import annotations
 
-from typing import get_type_hints
-from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
-from app.services.grounds_service import list_grounds, get_ground, search_grounds
+from app.services.grounds_service import get_ground, list_grounds, search_grounds
 
 router = APIRouter(tags=["Grounds"])
 

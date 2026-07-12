@@ -106,6 +106,17 @@ class TestCrowdEndpoint:
         assert "stadium_capacity" in data
         assert "overall_occupancy_pct" in data
         assert "source" in data
+        assert "operations_brief" in data
+
+    def test_crowd_operations_brief_is_actionable(self, client: TestClient) -> None:
+        data = client.get("/api/crowd").json()
+        brief = data["operations_brief"]
+        assert brief["risk_level"] in {"low", "elevated", "high", "critical"}
+        assert len(brief["headline"]) > 0
+        assert len(brief["recommended_staffing"]) > 0
+        assert len(brief["fan_messaging"]) > 0
+        assert "accessibility_note" in brief
+        assert "sustainability_note" in brief
 
     def test_crowd_zones_have_required_fields(self, client: TestClient) -> None:
         data = client.get("/api/crowd").json()

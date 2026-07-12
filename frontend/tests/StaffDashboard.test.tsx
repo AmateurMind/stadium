@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, type Mock } from 'vitest';
 import { StaffDashboard } from '../src/components/Dashboard/StaffDashboard';
 
 // Mock global fetch
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as Mock;
 
 describe('StaffDashboard Visualizer', () => {
   beforeEach(() => {
@@ -41,6 +41,14 @@ describe('StaffDashboard Visualizer', () => {
           stadium_capacity: 60000,
           overall_occupancy_pct: 7.5,
           source: 'gemini',
+          operations_brief: {
+            risk_level: 'critical',
+            headline: 'Gate A Entrance is the highest-pressure zone at 90% capacity.',
+            recommended_staffing: ['Position supervisors at Gate A Entrance.'],
+            fan_messaging: ['Please allow extra time near Gate A Entrance.'],
+            accessibility_note: 'Protect step-free movement near Gate A Entrance.',
+            sustainability_note: 'Prioritize app push alerts and digital signage.',
+          },
         }),
       })
       .mockResolvedValueOnce({
@@ -79,6 +87,8 @@ describe('StaffDashboard Visualizer', () => {
       expect(screen.getByText('4,500')).toBeInTheDocument();
       expect(screen.getByText(/7.5%/i)).toBeInTheDocument();
       expect(screen.getByText(/active alerts/i)).toBeInTheDocument();
+      expect(screen.getByText(/fifa 2026 operations brief/i)).toBeInTheDocument();
+      expect(screen.getByText(/critical risk/i)).toBeInTheDocument();
     });
 
     // Check that alerts details are displayed

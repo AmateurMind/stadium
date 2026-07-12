@@ -10,10 +10,11 @@ from __future__ import annotations
 from app.models.stadium import ZoneStatus
 from app.services.stadium_data import (
     STADIUM_CAPACITY,
+    find_nearest_zone,
+    get_operations_brief,
     get_rule_based_alerts,
     get_total_attendance,
     get_zone_statuses,
-    find_nearest_zone,
 )
 
 
@@ -25,8 +26,16 @@ class TestZoneStatuses:
         assert len(zones) == 15
 
     def test_all_zones_have_valid_types(self) -> None:
-        valid_types = {"gate", "concourse", "seating", "restroom", "concession",
-                       "first_aid", "parking", "vip"}
+        valid_types = {
+            "gate",
+            "concourse",
+            "seating",
+            "restroom",
+            "concession",
+            "first_aid",
+            "parking",
+            "vip",
+        }
         zones = get_zone_statuses()
         for zone in zones:
             assert zone.zone_type in valid_types
@@ -108,6 +117,41 @@ class TestRuleBasedAlerts:
         ]
         alerts = get_rule_based_alerts(zones)
         assert len(alerts) == 0
+
+
+class TestOperationsBrief:
+    """Tests for deterministic tournament operations brief."""
+
+    def test_critical_alert_sets_critical_risk(self) -> None:
+        zones = [
+            ZoneStatus(
+                zone_id="gate-a",
+                zone_name="Gate A",
+                zone_type="gate",
+                current_occupancy=4600,
+                max_capacity=5000,
+                occupancy_pct=92.0,
+                status="congested",
+                wait_time_minutes=20,
+            ),
+            ZoneStatus(
+                zone_id="gate-b",
+                zone_name="Gate B",
+                zone_type="gate",
+                current_occupancy=1200,
+                max_capacity=4000,
+                occupancy_pct=30.0,
+                status="normal",
+                wait_time_minutes=2,
+            ),
+        ]
+        alerts = get_rule_based_alerts(zones)
+        brief = get_operations_brief(zones, alerts)
+
+        assert brief.risk_level == "critical"
+        assert "Gate A" in brief.headline
+        assert any("Gate B" in action for action in brief.recommended_staffing)
+        assert "digital signage" in brief.sustainability_note
 
 
 class TestAttendance:

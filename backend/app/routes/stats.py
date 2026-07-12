@@ -4,8 +4,8 @@ GET /api/stats — Match statistics route integration with thestatsapi.com
 
 from __future__ import annotations
 
-from typing import get_type_hints
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query
+
 from app.services.stats_service import fetch_live_match_stats
 
 router = APIRouter(tags=["Stats"])

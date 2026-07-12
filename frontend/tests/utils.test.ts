@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, type Mock } from 'vitest';
 import { validateFanQuery } from '../src/utils/validators';
 import {
   getSessionId,
@@ -11,7 +11,7 @@ import {
 } from '../src/utils/formatters';
 import { apiClient } from '../src/api/client';
 
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as Mock;
 
 describe('Validator Utilities', () => {
   it('validates a correct FanQuery payload', () => {

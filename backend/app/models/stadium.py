@@ -120,6 +120,29 @@ class CrowdAlert(BaseModel):
     )
 
 
+class OperationsBrief(BaseModel):
+    """Tournament operations summary for command-center staff."""
+
+    risk_level: Literal["low", "elevated", "high", "critical"] = Field(
+        description="Current venue-wide operational risk level"
+    )
+    headline: str = Field(
+        description="One-line executive summary for matchday operators"
+    )
+    recommended_staffing: list[str] = Field(
+        description="Prioritized staff deployment actions"
+    )
+    fan_messaging: list[str] = Field(
+        description="Short public messages suitable for signage or app alerts"
+    )
+    accessibility_note: str = Field(
+        description="Accessibility-specific operational recommendation"
+    )
+    sustainability_note: str = Field(
+        description="Sustainability-minded operational recommendation"
+    )
+
+
 class CrowdAnalysisResponse(BaseModel):
     """Response from the crowd analysis endpoint."""
 
@@ -136,4 +159,7 @@ class CrowdAnalysisResponse(BaseModel):
     )
     source: Literal["gemini", "rules"] = Field(
         description="Which engine generated the alerts"
+    )
+    operations_brief: OperationsBrief = Field(
+        description="Actionable tournament operations brief for staff"
     )

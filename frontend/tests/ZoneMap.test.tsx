@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, type Mock } from 'vitest';
 import { ZoneMap } from '../src/components/Zones/ZoneMap';
 
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as Mock;
 
 describe('ZoneMap Component', () => {
   beforeEach(() => {

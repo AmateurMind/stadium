@@ -11,6 +11,7 @@ import type {
   FanQuery,
   ZoneStatus,
   GroundSummary,
+  MatchStats,
 } from '../types';
 
 const configuredApiBase = import.meta.env.VITE_API_BASE_URL?.trim() ?? '';
@@ -80,8 +81,8 @@ export const apiClient = {
     return handleResponse<{ grounds: GroundSummary[]; total: number }>(res);
   },
 
-  async getMatchStats(matchId = 'mt_010249745'): Promise<any> {
+  async getMatchStats(matchId = 'mt_010249745'): Promise<MatchStats> {
     const res = await fetch(`${BASE_URL}/stats?match_id=${matchId}`);
-    return handleResponse<any>(res);
+    return handleResponse<MatchStats>(res);
   },
 };
