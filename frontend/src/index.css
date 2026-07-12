@@ -1,10 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Sora:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply bg-canvas;
+  }
+
   body {
-    @apply text-gray-900 bg-slate-50 font-sans antialiased selection:bg-primary-200 selection:text-primary-900;
+    @apply bg-canvas font-sans text-ink antialiased selection:bg-accent selection:text-ink;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display text-ink;
   }
 }
 
@@ -20,13 +35,13 @@
 
 /* Glassmorphism utility classes */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(232, 226, 208, 0.78);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .dark-glass-panel {
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(45, 58, 31, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }

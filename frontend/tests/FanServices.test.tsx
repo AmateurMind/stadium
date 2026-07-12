@@ -66,6 +66,6 @@ describe('FanServices', () => {
     expect(screen.getByText(/welcome to the stadium/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /show live caption preview/i }));
-    expect(screen.getByText(/caption preview/i)).toBeInTheDocument();
+    expect(screen.getByText('[Caption preview] Use Gate A.')).toBeInTheDocument();
   });
 });

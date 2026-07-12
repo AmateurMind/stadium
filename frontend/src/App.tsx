@@ -22,16 +22,16 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 transition-colors duration-300">
+      <div className="min-h-screen flex flex-col bg-canvas text-ink transition-colors duration-300">
         <SkipLink />
 
         {/* Header navigation bar */}
-        <header className="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-40 transition-colors duration-300">
+        <header className="bg-surface border-b border-line shadow-sm sticky top-0 z-40 transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
-                  <span className="text-2xl font-black tracking-tight text-primary-600 flex items-center gap-2">
+                  <span className="font-display text-2xl font-black tracking-tight text-primary-600 flex items-center gap-2">
                     <span aria-hidden="true">🏟️</span> StadiumSync
                   </span>
                 </div>
@@ -168,7 +168,7 @@ export default function App() {
 
         {/* Main content body */}
         <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 focus:outline-none">
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 min-h-[500px]">
+          <div className="bg-surface rounded-3xl border border-line shadow-sm p-6 sm:p-8 min-h-[500px]">
             {view === 'assistant' && <FanAssistant />}
             {view !== 'assistant' && (
               <Suspense
@@ -187,7 +187,7 @@ export default function App() {
         </main>
 
         {/* Footer */}
-        <footer className="bg-white border-t border-slate-100 py-6 text-center text-xs text-slate-400">
+        <footer className="bg-surface border-t border-line py-6 text-center text-xs text-slate-500">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p>&copy; {new Date().getFullYear()} StadiumSync. Built for smart World Cup 2026 stadium operations.</p>
           </div>
