@@ -145,14 +145,14 @@ def _occupancy_status(pct: float) -> str:
     return "normal"
 
 
-def _wait_time(pct: float, zone_type: str) -> int:
+def _wait_time(pct: float, zone_type: str, rng: random.Random) -> int:
     """Estimate wait time based on occupancy and zone type."""
     if zone_type in ("gate", "restroom", "concession"):
         if pct >= 90:
-            return random.randint(15, 30)
+            return rng.randint(15, 30)
         if pct >= 70:
-            return random.randint(5, 15)
-        return random.randint(0, 5)
+            return rng.randint(5, 15)
+        return rng.randint(0, 5)
     return 0
 
 
@@ -182,7 +182,7 @@ def get_zone_statuses() -> list[ZoneStatus]:
                 max_capacity=zone_def["max_capacity"],
                 occupancy_pct=pct,
                 status=_occupancy_status(pct),
-                wait_time_minutes=_wait_time(pct, zone_def["zone_type"]),
+                wait_time_minutes=_wait_time(pct, zone_def["zone_type"], rng),
                 is_accessible=zone_def["is_accessible"],
             )
         )

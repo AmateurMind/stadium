@@ -62,6 +62,7 @@ class TestZoneStatuses:
         for z1, z2 in zip(zones1, zones2):
             assert z1.zone_id == z2.zone_id
             assert z1.current_occupancy == z2.current_occupancy
+            assert z1.wait_time_minutes == z2.wait_time_minutes
 
 
 class TestRuleBasedAlerts:

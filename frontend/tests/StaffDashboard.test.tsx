@@ -74,6 +74,58 @@ describe('StaffDashboard Visualizer', () => {
           },
           source: 'thestatsapi',
         }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          stadium_id: 'metlife',
+          stadium_name: 'MetLife Stadium',
+          data_notice: 'Prototype data: simulated services.',
+          accessibility: {
+            voice_navigation: 'Start at Gate A.',
+            wheelchair_route: 'Use Gate A.',
+            sign_language_avatar_script: 'Welcome.',
+            live_caption_preview: '[Caption preview] Guidance.',
+            audio_description: 'Audio description via app.',
+          },
+          food_recommendation: {
+            recommended_venue: 'Food Court B',
+            nearby_landmark: 'Gate B concourse',
+            estimated_wait_minutes: 4,
+            kickoff_in_minutes: 30,
+            reasoning: 'Shorter queue.',
+            source: 'simulated',
+          },
+          transport: {
+            weather_summary: 'Clear.',
+            delay_summary: 'No delay.',
+            options: [],
+            source: 'simulated',
+          },
+          vision: {
+            detection_capabilities: ['Long queues', 'Spills', 'Fights', 'Unattended bags'],
+            active_incidents: [
+              {
+                detection_type: 'long_queue',
+                location: 'Gate A Entrance',
+                severity: 'critical',
+                confidence_pct: 90,
+                generated_guidance: 'Deploy queue stewards.',
+              },
+            ],
+            response_playbooks: [
+              {
+                detection_type: 'unattended_bag',
+                location: 'Camera feed required',
+                severity: 'critical',
+                confidence_pct: 0,
+                generated_guidance: 'Notify security immediately.',
+              },
+            ],
+            data_notice: 'Camera feed required.',
+            source: 'simulated',
+          },
+        }),
       });
 
     render(<StaffDashboard />);
@@ -89,6 +141,8 @@ describe('StaffDashboard Visualizer', () => {
       expect(screen.getByText(/active alerts/i)).toBeInTheDocument();
       expect(screen.getByText(/fifa 2026 operations brief/i)).toBeInTheDocument();
       expect(screen.getByText(/critical risk/i)).toBeInTheDocument();
+      expect(screen.getByText(/vision ai \+ safety guidance/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/long queue/i).length).toBeGreaterThan(0);
     });
 
     // Check that alerts details are displayed

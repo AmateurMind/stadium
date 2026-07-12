@@ -14,7 +14,7 @@ import { useStadiumStore } from '../../store/stadiumStore';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { getSeverityColor, formatZoneType, getZoneIcon } from '../../utils/formatters';
 import { apiClient } from '../../api/client';
-import type { MatchStats } from '../../types';
+import type { FanServices, MatchStats } from '../../types';
 
 const OCCUPANCY_COLORS: Record<string, string> = {
   normal: '#22c55e',
@@ -34,23 +34,17 @@ export const StaffDashboard = () => {
   const crowdAnalysis = useStadiumStore(s => s.crowdAnalysis);
   const isLoadingCrowd = useStadiumStore(s => s.isLoadingCrowd);
   const error = useStadiumStore(s => s.error);
+  const stadiumId = useStadiumStore(s => s.stadiumId);
   const fetchCrowdAnalysis = useStadiumStore(s => s.fetchCrowdAnalysis);
 
   const [matchStats, setMatchStats] = useState<MatchStats | null>(null);
-
-  const fetchStats = async () => {
-    try {
-      const data = await apiClient.getMatchStats();
-      setMatchStats(data);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const [fanServices, setFanServices] = useState<FanServices | null>(null);
 
   useEffect(() => {
     fetchCrowdAnalysis();
-    fetchStats();
-  }, [fetchCrowdAnalysis]);
+    void apiClient.getMatchStats().then(setMatchStats).catch(() => setMatchStats(null));
+    void apiClient.getFanServices(stadiumId).then(setFanServices).catch(() => setFanServices(null));
+  }, [fetchCrowdAnalysis, stadiumId]);
 
   if (isLoadingCrowd && !crowdAnalysis) {
     return (
@@ -249,6 +243,67 @@ export const StaffDashboard = () => {
           </p>
         </div>
       </div>
+
+      {fanServices && (
+        <section className="rounded-2xl border border-violet-100 bg-violet-50 p-5" aria-labelledby="vision-monitor-heading">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-violet-700">
+                Vision AI + safety guidance
+              </p>
+              <h2 id="vision-monitor-heading" className="mt-1 text-lg font-bold text-violet-950">
+                Safety monitor
+              </h2>
+            </div>
+            <span className="rounded-full border border-violet-200 bg-white px-3 py-1 text-xs font-semibold text-violet-800">
+              Simulated camera feed
+            </span>
+          </div>
+          <p className="mt-3 text-sm text-violet-900">{fanServices.vision.data_notice}</p>
+          <div className="mt-3 flex flex-wrap gap-2" aria-label="Vision detection capabilities">
+            {fanServices.vision.detection_capabilities.map(capability => (
+              <span key={capability} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-violet-800">
+                {capability}
+              </span>
+            ))}
+          </div>
+
+          {fanServices.vision.active_incidents.length > 0 ? (
+            <ul className="mt-4 space-y-3" aria-label="Active vision safety incidents">
+              {fanServices.vision.active_incidents.map(incident => (
+                <li key={`${incident.detection_type}-${incident.location}`} className="rounded-xl border border-violet-200 bg-white p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold capitalize text-violet-950">
+                      {incident.detection_type.replace('_', ' ')}
+                    </span>
+                    <span className="text-xs text-violet-700">{incident.location}</span>
+                    <span className="text-xs text-violet-700">{incident.confidence_pct}% confidence</span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-700">{incident.generated_guidance}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 rounded-xl bg-white p-4 text-sm text-slate-700">
+              No active simulated vision incidents. Continue monitoring live crowd data.
+            </p>
+          )}
+
+          <details className="mt-4 rounded-xl border border-violet-200 bg-white p-4">
+            <summary className="cursor-pointer font-semibold text-violet-950">Safety response playbooks</summary>
+            <ul className="mt-3 space-y-3 text-sm text-slate-700">
+              {fanServices.vision.response_playbooks.map(playbook => (
+                <li key={playbook.detection_type}>
+                  <span className="font-semibold capitalize text-slate-900">
+                    {playbook.detection_type.replace('_', ' ')}:
+                  </span>{' '}
+                  {playbook.generated_guidance}
+                </li>
+              ))}
+            </ul>
+          </details>
+        </section>
+      )}
 
       {/* Overall stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

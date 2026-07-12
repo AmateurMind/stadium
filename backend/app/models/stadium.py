@@ -163,3 +163,80 @@ class CrowdAnalysisResponse(BaseModel):
     operations_brief: OperationsBrief = Field(
         description="Actionable tournament operations brief for staff"
     )
+
+
+# ---------------------------------------------------------------------------
+# Fan Services & Safety Intelligence
+# ---------------------------------------------------------------------------
+class AccessibilityGuidance(BaseModel):
+    """Accessible matchday guidance for disabled visitors."""
+
+    voice_navigation: str = Field(description="Short route guidance suitable for text-to-speech")
+    wheelchair_route: str = Field(description="Step-free route and facilities guidance")
+    sign_language_avatar_script: str = Field(
+        description="Concise script for a sign-language avatar integration"
+    )
+    live_caption_preview: str = Field(
+        description="Caption text shown while a live-caption provider is not connected"
+    )
+    audio_description: str = Field(description="Available audio-description support")
+
+
+class FoodRecommendation(BaseModel):
+    """Queue-aware food recommendation for a fan."""
+
+    recommended_venue: str
+    nearby_landmark: str
+    estimated_wait_minutes: int = Field(ge=0)
+    kickoff_in_minutes: int = Field(ge=0)
+    reasoning: str
+    source: Literal["simulated"]
+
+
+class TransportOption(BaseModel):
+    """A single transport choice with crowd-aware guidance."""
+
+    mode: Literal["metro", "shuttle", "rideshare", "walking"]
+    recommendation: str
+    reason: str
+
+
+class TransportGuidance(BaseModel):
+    """Transport choices informed by the current prototype context."""
+
+    weather_summary: str
+    delay_summary: str
+    options: list[TransportOption]
+    source: Literal["simulated"]
+
+
+class VisionIncident(BaseModel):
+    """A safety event produced by a connected or simulated vision feed."""
+
+    detection_type: Literal["long_queue", "spill", "fight", "unattended_bag"]
+    location: str
+    severity: Literal["info", "warning", "critical"]
+    confidence_pct: float = Field(ge=0, le=100)
+    generated_guidance: str
+
+
+class VisionSafetySnapshot(BaseModel):
+    """Vision capability, active detections, and response playbooks."""
+
+    detection_capabilities: list[str]
+    active_incidents: list[VisionIncident]
+    response_playbooks: list[VisionIncident]
+    data_notice: str
+    source: Literal["simulated"]
+
+
+class FanServicesResponse(BaseModel):
+    """Accessibility, recommendation, transport, and safety services response."""
+
+    stadium_id: str
+    stadium_name: str
+    data_notice: str
+    accessibility: AccessibilityGuidance
+    food_recommendation: FoodRecommendation
+    transport: TransportGuidance
+    vision: VisionSafetySnapshot

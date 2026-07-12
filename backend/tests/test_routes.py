@@ -62,6 +62,22 @@ class TestAssistantEndpoint:
         data = client.post("/api/assistant", json=sample_fan_query).json()
         assert data["language"] == "es"
 
+    def test_assistant_honors_selected_topic_in_offline_mode(
+        self, client: TestClient, sample_fan_query: dict
+    ) -> None:
+        sample_fan_query.update(
+            {
+                "message": "I need some help.",
+                "category": "amenities",
+                "stadium_id": "metlife",
+            }
+        )
+        data = client.post("/api/assistant", json=sample_fan_query).json()
+
+        assert data["source"] == "rules"
+        assert data["category"] == "amenities"
+        assert "Amenities at MetLife Stadium" in data["reply"]
+
     def test_assistant_validates_missing_session_id(self, client: TestClient) -> None:
         response = client.post("/api/assistant", json={
             "message": "Where is Gate A?",

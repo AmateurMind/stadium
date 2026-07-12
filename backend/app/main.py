@@ -27,7 +27,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import get_settings
 from app.core.rate_limit import limiter
 from app.core.security import SecurityHeadersMiddleware
-from app.routes import assistant, crowd, grounds, health, stats, zones
+from app.routes import assistant, crowd, grounds, health, services, stats, zones
 
 
 @asynccontextmanager
@@ -81,6 +81,7 @@ app.include_router(crowd.router, prefix="/api")
 app.include_router(zones.router, prefix="/api")
 app.include_router(grounds.router, prefix="/api")
 app.include_router(stats.router, prefix="/api")
+app.include_router(services.router, prefix="/api")
 
 _static_path = os.path.join(os.path.dirname(__file__), "..", "static")
 _assets_path = os.path.join(_static_path, "assets")

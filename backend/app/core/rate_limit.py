@@ -18,3 +18,4 @@ ASSISTANT_LIMIT = "20/minute"    # Fan assistant chat queries
 CROWD_LIMIT = "30/minute"       # Crowd density / zone updates
 ZONES_LIMIT = "30/minute"       # Stadium zone info requests
 ALERTS_LIMIT = "10/minute"      # Staff alert recommendations (Gemini-heavy)
+SERVICES_LIMIT = "30/minute"    # Fan services and simulated safety snapshot

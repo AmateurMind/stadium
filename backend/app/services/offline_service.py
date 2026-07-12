@@ -48,7 +48,12 @@ TEMPLATES = {
         "medical": "First Aid at {title}: {value}",
         "worship": "Multi-faith Space at {title}: {value}",
         "schedule": "FIFA World Cup 2026 Details: Opening match is {opening} at {open_ground}. The final is {final} at {final_ground}.",
-        "fallback": "I found information for {title}. Restrooms: {restrooms}. Elevators: {lifts}. Accessible entrances: {entrances}."
+        "fallback": "I found information for {title}. Restrooms: {restrooms}. Elevators: {lifts}. Accessible entrances: {entrances}.",
+        "topic_navigation": "Navigation at {title}: use stadium wayfinding signs to reach your section. Step-free entrances are available at {entrances}.",
+        "topic_amenities": "Amenities at {title}: {food}. {water}",
+        "topic_transport": "Transport guidance for {title}: check the official tournament travel plan before leaving and follow venue signs for your arrival mode. For step-free drop-off, use {entrances}.",
+        "topic_accessibility": "Accessible facilities at {title}: {restrooms}. {lifts}",
+        "topic_safety": "Safety support at {title}: {medical}",
     },
     "es": {
         "welcome": "¡Bienvenido al asistente de la Copa Mundial de la FIFA 2026! ¿Cómo puedo ayudarle?",
@@ -67,7 +72,12 @@ TEMPLATES = {
         "medical": "Primeros auxilios en {title}: {value}",
         "worship": "Espacio de oración en {title}: {value}",
         "schedule": "Detalles de la Copa Mundial FIFA 2026: El partido inaugural es el {opening} en {open_ground}. La final es el {final} en {final_ground}.",
-        "fallback": "Encontré información de {title}. Baños: {restrooms}. Ascensores: {lifts}. Entradas accesibles: {entrances}."
+        "fallback": "Encontré información de {title}. Baños: {restrooms}. Ascensores: {lifts}. Entradas accesibles: {entrances}.",
+        "topic_navigation": "Navegación en {title}: use las señales del estadio para llegar a su sección. Hay entradas sin escalones en {entrances}.",
+        "topic_amenities": "Servicios en {title}: {food}. {water}",
+        "topic_transport": "Orientación de transporte para {title}: consulte el plan oficial de viaje del torneo antes de salir y siga las señales del estadio según su medio de llegada. Para el descenso sin escalones, use {entrances}.",
+        "topic_accessibility": "Instalaciones accesibles en {title}: {restrooms}. {lifts}",
+        "topic_safety": "Apoyo de seguridad en {title}: {medical}",
     },
     "fr": {
         "welcome": "Bienvenue dans l'assistant de la Coupe du Monde de la FIFA 2026 ! Comment puis-je vous aider ?",
@@ -86,7 +96,12 @@ TEMPLATES = {
         "medical": "Premiers secours à {title}: {value}",
         "worship": "Espace de prière à {title}: {value}",
         "schedule": "Détails de la Coupe du Monde de la FIFA 2026: Match d'ouverture le {opening} à {open_ground}. Finale le {final} à {final_ground}.",
-        "fallback": "J'ai trouvé des infos sur {title}. Toilettes: {restrooms}. Ascenseurs: {lifts}. Entrées accessibles: {entrances}."
+        "fallback": "J'ai trouvé des infos sur {title}. Toilettes: {restrooms}. Ascenseurs: {lifts}. Entrées accessibles: {entrances}.",
+        "topic_navigation": "Navigation à {title}: utilisez la signalétique du stade pour rejoindre votre section. Des entrées sans marche sont disponibles à {entrances}.",
+        "topic_amenities": "Services à {title}: {food}. {water}",
+        "topic_transport": "Conseils de transport pour {title}: consultez le plan de déplacement officiel du tournoi avant de partir et suivez la signalétique du stade selon votre moyen d'arrivée. Pour une dépose sans marche, utilisez {entrances}.",
+        "topic_accessibility": "Installations accessibles à {title}: {restrooms}. {lifts}",
+        "topic_safety": "Assistance de sécurité à {title}: {medical}",
     }
 }
 
@@ -101,6 +116,7 @@ def offline_answer(
     message: str,
     language: str,
     stadium_id: str | None = None,
+    category: str = "general",
 ) -> dict[str, Any]:
     """
     Generate deterministic response based on keywords and stadium context.
@@ -109,11 +125,15 @@ def offline_answer(
     if lang not in SUPPORTED_LANGUAGES:
         lang = "en"
 
+    requested_category = category
     t = TEMPLATES[lang]
     msg = message.strip()
 
-    # Handle schedule/general tournament queries first
-    if _matches(msg, ["match", "opening", "final", "kickoff", "schedule", "partido", "inaugural", "calendario"]):
+    # Handle schedule/general tournament queries first.
+    if requested_category == "schedule" or _matches(
+        msg,
+        ["match", "opening", "final", "kickoff", "schedule", "partido", "inaugural", "calendario"],
+    ):
         grounds = list_grounds()
         open_ground = next((g["title"] for g in grounds if g["id"] == "azteca"), "Estadio Azteca")
         final_ground = next((g["title"] for g in grounds if g["id"] == "metlife"), "MetLife Stadium")
@@ -153,51 +173,51 @@ def offline_answer(
 
     # Match specific facilities/accessibility keyword
     matched_replies = []
-    category = "general"
+    detected_category = "general"
 
     if _matches(msg, KEYWORDS["wheelchair"]):
         matched_replies.append(t["wheelchair"].format(title=title, value=acc["wheelchair_seating"]))
-        category = "accessibility"
+        detected_category = "accessibility"
 
     if _matches(msg, KEYWORDS["hearing"]):
         matched_replies.append(t["hearing"].format(title=title, value=acc["hearing_support"]))
-        category = "accessibility"
+        detected_category = "accessibility"
 
     if _matches(msg, KEYWORDS["sight"]):
         matched_replies.append(t["sight"].format(title=title, value=acc["sight_support"]))
-        category = "accessibility"
+        detected_category = "accessibility"
 
     if _matches(msg, KEYWORDS["sensory"]):
         matched_replies.append(t["sensory"].format(title=title, value=acc["sensory_space"]))
-        category = "accessibility"
+        detected_category = "accessibility"
 
     if _matches(msg, KEYWORDS["lifts"]):
         matched_replies.append(t["lifts"].format(title=title, value=acc["lifts"]))
-        category = "accessibility"
+        detected_category = "accessibility"
 
     if _matches(msg, KEYWORDS["restrooms"]):
         matched_replies.append(t["restrooms"].format(title=title, value=acc["adapted_restrooms"]))
-        category = "accessibility"
+        detected_category = "accessibility"
 
     if _matches(msg, KEYWORDS["water"]):
         matched_replies.append(t["water"].format(title=title, value=fac["water_stations"]))
-        category = "amenities"
+        detected_category = "amenities"
 
     if _matches(msg, KEYWORDS["food"]):
         matched_replies.append(t["food"].format(title=title, value=fac["food_areas"]))
-        category = "amenities"
+        detected_category = "amenities"
 
     if _matches(msg, KEYWORDS["nursing"]):
         matched_replies.append(t["nursing"].format(title=title, value=fac["nursing_suite"]))
-        category = "amenities"
+        detected_category = "amenities"
 
     if _matches(msg, KEYWORDS["medical"]):
         matched_replies.append(t["medical"].format(title=title, value=fac["medical_post"]))
-        category = "safety"
+        detected_category = "safety"
 
     if _matches(msg, KEYWORDS["worship"]):
         matched_replies.append(t["worship"].format(title=title, value=fac["worship_space"]))
-        category = "amenities"
+        detected_category = "amenities"
 
     # If any specific keyword matched, join the replies
     if matched_replies:
@@ -207,12 +227,35 @@ def offline_answer(
         return {
             "reply": reply,
             "language": lang,
-            "category": category,
+            "category": detected_category,
             "suggested_actions": ["Find toilets", "Ask about water", "View quiet routes"]
         }
 
-    # Fallback to general stadium overview info
+    # Honor an explicitly selected topic when the free-text query has no matching keyword.
     entrances = ", ".join(e["name"] for e in ground["entrances"] if e["step_free"])
+    topic_fallbacks = {
+        "navigation": t["topic_navigation"].format(title=title, entrances=entrances),
+        "amenities": t["topic_amenities"].format(
+            title=title, food=fac["food_areas"], water=fac["water_stations"]
+        ),
+        "transport": t["topic_transport"].format(title=title, entrances=entrances),
+        "accessibility": t["topic_accessibility"].format(
+            title=title, restrooms=acc["adapted_restrooms"], lifts=acc["lifts"]
+        ),
+        "safety": t["topic_safety"].format(title=title, medical=fac["medical_post"]),
+    }
+    if requested_category in topic_fallbacks:
+        reply = topic_fallbacks[requested_category]
+        if not ground["verified"]:
+            reply += " " + t["unverified"]
+        return {
+            "reply": reply,
+            "language": lang,
+            "category": requested_category,
+            "suggested_actions": ["Ask about water", "Find accessible facilities", "Check entry routes"],
+        }
+
+    # Fall back to a general stadium overview.
     reply = t["fallback"].format(
         title=title, restrooms=acc["adapted_restrooms"],
         lifts=acc["lifts"], entrances=entrances

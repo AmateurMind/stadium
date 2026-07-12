@@ -91,7 +91,7 @@ export interface ChatMessage {
   suggested_actions?: string[];
 }
 
-export type AppView = 'assistant' | 'dashboard' | 'zones';
+export type AppView = 'assistant' | 'services' | 'dashboard' | 'zones';
 
 export interface LocaleInfo {
   city: string;
@@ -127,4 +127,60 @@ export interface MatchStats {
     corners: { home: number; away: number };
   };
   source: string;
+}
+
+export interface AccessibilityGuidance {
+  voice_navigation: string;
+  wheelchair_route: string;
+  sign_language_avatar_script: string;
+  live_caption_preview: string;
+  audio_description: string;
+}
+
+export interface FoodRecommendation {
+  recommended_venue: string;
+  nearby_landmark: string;
+  estimated_wait_minutes: number;
+  kickoff_in_minutes: number;
+  reasoning: string;
+  source: 'simulated';
+}
+
+export interface TransportOption {
+  mode: 'metro' | 'shuttle' | 'rideshare' | 'walking';
+  recommendation: string;
+  reason: string;
+}
+
+export interface TransportGuidance {
+  weather_summary: string;
+  delay_summary: string;
+  options: TransportOption[];
+  source: 'simulated';
+}
+
+export interface VisionIncident {
+  detection_type: 'long_queue' | 'spill' | 'fight' | 'unattended_bag';
+  location: string;
+  severity: AlertSeverity;
+  confidence_pct: number;
+  generated_guidance: string;
+}
+
+export interface VisionSafetySnapshot {
+  detection_capabilities: string[];
+  active_incidents: VisionIncident[];
+  response_playbooks: VisionIncident[];
+  data_notice: string;
+  source: 'simulated';
+}
+
+export interface FanServices {
+  stadium_id: string;
+  stadium_name: string;
+  data_notice: string;
+  accessibility: AccessibilityGuidance;
+  food_recommendation: FoodRecommendation;
+  transport: TransportGuidance;
+  vision: VisionSafetySnapshot;
 }

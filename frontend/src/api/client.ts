@@ -11,6 +11,7 @@ import type {
   FanQuery,
   ZoneStatus,
   GroundSummary,
+  FanServices,
   MatchStats,
 } from '../types';
 
@@ -84,5 +85,15 @@ export const apiClient = {
   async getMatchStats(matchId = 'mt_010249745'): Promise<MatchStats> {
     const res = await fetch(`${BASE_URL}/stats?match_id=${matchId}`);
     return handleResponse<MatchStats>(res);
+  },
+
+  /**
+   * Get accessibility guidance, queue-aware recommendations, and vision safety data.
+   * GET /api/services
+   */
+  async getFanServices(stadiumId: string): Promise<FanServices> {
+    const params = new URLSearchParams({ stadium_id: stadiumId });
+    const res = await fetch(`${BASE_URL}/services?${params}`);
+    return handleResponse<FanServices>(res);
   },
 };

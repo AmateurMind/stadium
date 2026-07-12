@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useStadiumStore } from './store/stadiumStore';
 import { FanAssistant } from './components/Assistant/FanAssistant';
-import { StaffDashboard } from './components/Dashboard/StaffDashboard';
-import { ZoneMap } from './components/Zones/ZoneMap';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
+import { LoadingSpinner } from './components/shared/LoadingSpinner';
 import { SkipLink } from './components/shared/SkipLink';
+
+const StaffDashboard = lazy(async () => ({
+  default: (await import('./components/Dashboard/StaffDashboard')).StaffDashboard,
+}));
+const FanServices = lazy(async () => ({
+  default: (await import('./components/Services/FanServices')).FanServices,
+}));
+const ZoneMap = lazy(async () => ({
+  default: (await import('./components/Zones/ZoneMap')).ZoneMap,
+}));
 
 export default function App() {
   const view = useStadiumStore((s) => s.view);
@@ -37,6 +46,17 @@ export default function App() {
                     aria-current={view === 'assistant' ? 'page' : undefined}
                   >
                     Fan Assistant
+                  </button>
+                  <button
+                    onClick={() => setView('services')}
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
+                      view === 'services'
+                        ? 'border-primary-500 text-slate-950 font-semibold'
+                        : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                    }`}
+                    aria-current={view === 'services' ? 'page' : undefined}
+                  >
+                    Fan Services
                   </button>
                   <button
                     onClick={() => setView('dashboard')}
@@ -101,6 +121,20 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => {
+                    setView('services');
+                    setMenuOpen(false);
+                  }}
+                  className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left transition-colors ${
+                    view === 'services'
+                      ? 'bg-primary-50 border-primary-500 text-primary-700'
+                      : 'border-transparent text-slate-500 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700'
+                  }`}
+                  aria-current={view === 'services' ? 'page' : undefined}
+                >
+                  Fan Services
+                </button>
+                <button
+                  onClick={() => {
                     setView('dashboard');
                     setMenuOpen(false);
                   }}
@@ -136,8 +170,19 @@ export default function App() {
         <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 focus:outline-none">
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 min-h-[500px]">
             {view === 'assistant' && <FanAssistant />}
-            {view === 'dashboard' && <StaffDashboard />}
-            {view === 'zones' && <ZoneMap />}
+            {view !== 'assistant' && (
+              <Suspense
+                fallback={
+                  <div className="flex justify-center py-16">
+                    <LoadingSpinner label="Loading workspace..." />
+                  </div>
+                }
+              >
+                {view === 'dashboard' && <StaffDashboard />}
+                {view === 'services' && <FanServices />}
+                {view === 'zones' && <ZoneMap />}
+              </Suspense>
+            )}
           </div>
         </main>
 
